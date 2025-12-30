@@ -1,5 +1,5 @@
 {
-  "name": "feathervmc",
+  "name": "feather-vmc",
   "type": "module",
   "private": true,
   "scripts": {
