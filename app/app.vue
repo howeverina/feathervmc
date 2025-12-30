@@ -22,7 +22,7 @@
     const { data } = await useFetch('/api/vmcmixer', {
       method: 'POST',
       body: { 
-        use2ndData: ['chest', 'upperChest', 'leftShoulder', 'leftUpperArm', 'leftLowerArm', 'rightShoulder', 'rightUpperArm', 'rightLowerArm'], 
+        use2ndData: ['Chest', 'UpperChest', 'LeftShoulder', 'LeftUpperArm', 'LeftLowerArm', 'RightShoulder', 'RightUpperArm', 'RightLowerArm'], 
         port1: port1.value, 
         port2: port2.value, 
         sendIp: '127.0.0.1', 

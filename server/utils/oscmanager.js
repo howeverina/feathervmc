@@ -66,15 +66,12 @@ export const stopOSC = () => {
 
     if (firstPort) {
         firstPort.close();
-        firstPort = null;
     }
     if (secondPort) {
         secondPort.close();
-        secondPort = null;
     }
     if (sendPort) {
         sendPort.close();
-        sendPort = null;
     }
 
     console.log("VMC Bridge Stopped");
