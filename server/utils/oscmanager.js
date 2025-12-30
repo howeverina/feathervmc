@@ -61,7 +61,7 @@ export const initOSC = (config) => {
     secondPort.open()
     sendPort.open()
 
-    console.log("OSC Ports Opened!")
+    console.log("VMC 신호를 합치기 위한 포트가 준비되었습니다!")
 }
 // 포트 닫기 함수 추가
 export const stopOSC = () => {
@@ -117,7 +117,7 @@ export const initOSC2 = (config) => {
     sendPort1.open()
     sendPort2.open()
 
-    console.log("OSC Ports Opened!")
+    console.log("VMC 신호를 나누기 위한 포트가 준비되었습니다!")
 }
 
 // 포트 닫기 함수 추가
@@ -254,7 +254,7 @@ export const startCompoundBoneOSC = (config) => {
         }
     }, 50);
 
-    console.log("OSC Ports Opened!");
+    console.log("VMC 신호를 변환하기 위한 포트가 준비되었습니다!");
 }
 
 export const stopOSC3 = () => {
