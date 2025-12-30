@@ -159,7 +159,7 @@ export const startCompoundBoneOSC = (config) => {
             x: ix * qw + iw * -qx + iy * -qz - iz * -qy,
             y: iy * qw + iw * -qy + iz * -qx - ix * -qz,
             z: iz * qw + iw * -qz + ix * -qy - iy * -qx
-        };
+        }
     }
 
     function calculateWorldTransform(chainNames, boneMap) {
@@ -191,14 +191,17 @@ export const startCompoundBoneOSC = (config) => {
         const up = new THREE.Vector3(0, 1, 0); 
         quaternion.setFromUnitVectors(up, direction);
 
-        // 사용자의 의도대로 'Hips'로 반환 (다른 포트의 가짜 모델 제어용)
         return ['Hips', position.x, position.y, position.z, quaternion.x, quaternion.y, quaternion.z, quaternion.w];
     }
 
     const leftHandChain = [
         "Hips", "Spine", "Chest", "UpperChest", 
         "LeftShoulder", "LeftUpperArm", "LeftLowerArm", "LeftHand"
-    ];
+    ]
+    const rightHandChain = [
+        "Hips", "Spine", "Chest", "UpperChest", 
+        "RightShoulder", "RightUpperArm", "RightLowerArm", "RightHand"
+    ]
 
     if (bonePort) {
         stopOSC3(); // 기존 실행 중인 프로세스 정리
@@ -213,20 +216,41 @@ export const startCompoundBoneOSC = (config) => {
 
     startBone = config.bone1 || 'Spine';
     endBone = config.bone2 || 'LeftHand';
+    let chain1, chain2
 
-    let boneChain1 = leftHandChain.slice(0, leftHandChain.indexOf(startBone) + 1);
-    let boneChain2 = leftHandChain.slice(0, leftHandChain.indexOf(endBone) + 1);
+    if (leftHandChain.includes(startBone)) {
+        chain1 = leftHandChain
+    } else if (rightHandChain.includes(startBone)) {
+        chain1 = rightHandChain
+    }
+    
+    if (leftHandChain.includes(endBone)) {
+        chain2 = leftHandChain
+    } else if (rightHandChain.includes(endBone)) {
+        chain2 = rightHandChain
+    }
 
-    let rawVmcMessages = new Map();
-    leftHandChain.forEach(name => {
-        rawVmcMessages.set(name, [name, 0, 0, 0, 0, 0, 0, 1]);
-    });
+    let boneChain1 = chain1.slice(0, chain1.indexOf(startBone) + 1);
+    let boneChain2 = chain2.slice(0, chain2.indexOf(endBone) + 1);
+
+    let rawVmcMessages1 = new Map();
+    chain1.forEach(name => {
+        rawVmcMessages1.set(name, [name, 0, 0, 0, 0, 0, 0, 1]);
+    })
+
+    let rawVmcMessages2 = new Map();
+    chain2.forEach(name => {
+        rawVmcMessages2.set(name, [name, 0, 0, 0, 0, 0, 0, 1]);
+    })
 
     bonePort.on("message", (msg) => {
         if (msg.address === "/VMC/Ext/Bone/Pos") {
             const boneName = msg.args[0];
-            if (leftHandChain.includes(boneName)) {
-                rawVmcMessages.set(boneName, msg.args);
+            if (chain1.includes(boneName)) {
+                rawVmcMessages1.set(boneName, msg.args);
+            }
+            if (chain2.includes(boneName)) {
+                rawVmcMessages2.set(boneName, msg.args);
             }
         }
     });
@@ -234,17 +258,26 @@ export const startCompoundBoneOSC = (config) => {
     bonePort.open();
 
     boneInterval = setInterval(() => {
-        let boneMap = new Map();
-        rawVmcMessages.forEach((message) => {
+        let boneMap1 = new Map();
+        rawVmcMessages1.forEach((message) => {
             const [name, x, y, z, qx, qy, qz, qw] = message;
-            boneMap.set(name, {
+            boneMap1.set(name, {
+                pos: { x, y, z },
+                rot: { x: qx, y: qy, z: qz, w: qw }
+            });
+        })
+
+        let boneMap2 = new Map();
+        rawVmcMessages2.forEach((message) => {
+            const [name, x, y, z, qx, qy, qz, qw] = message;
+            boneMap2.set(name, {
                 pos: { x, y, z },
                 rot: { x: qx, y: qy, z: qz, w: qw }
             });
         });
 
-        const finalBoneTransform1 = calculateWorldTransform(boneChain1, boneMap);
-        const finalBoneTransform2 = calculateWorldTransform(boneChain2, boneMap);
+        const finalBoneTransform1 = calculateWorldTransform(boneChain1, boneMap1);
+        const finalBoneTransform2 = calculateWorldTransform(boneChain2, boneMap2);
 
         if (bonePort) {
             bonePort.send({
