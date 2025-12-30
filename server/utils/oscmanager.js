@@ -35,7 +35,7 @@ export const initOSC = (config) => {
     })
 
     const forwardMessage = (oscMessage, isSecond) => {
-        const boneName = oscMessage.args[0]
+        const boneName = oscMessage.args?oscMessage.args[0]:''
         const isRoot = oscMessage.address === '/VMC/Ext/Root/Pos'
         const isBone = oscMessage.address === '/VMC/Ext/Bone/Pos'
 
@@ -44,9 +44,9 @@ export const initOSC = (config) => {
         if (isBone) {
             shouldSend = isSecond ? use2ndDataArray.includes(boneName) : !use2ndDataArray.includes(boneName)
         } else if (isRoot) {
-            shouldSend = isSecond ? use2ndDataArray.includes('root') : !use2ndDataArray.includes('root')
+            shouldSend = isSecond ? use2ndDataArray.includes('Root') : !use2ndDataArray.includes('Root')
         } else {
-            shouldSend = isSecond ? use2ndDataArray.includes('others') : !use2ndDataArray.includes('others')
+            shouldSend = !isSecond ? !use2ndDataArray.includes('Others') : use2ndDataArray.includes('Others')
         }
 
         if (shouldSend) {

@@ -22,14 +22,14 @@
                     <div class="form-title">전송할 포트</div>
                     <input v-model="sendPort" type="number" placeholder="최종 신호를 전송할 포트 입력" />
                 </div>
-            </div>
-            
-            <div class="description">
-                <p>현재 트래커에서 받아오는 신호: 'chest', 'upperChest', 'leftShoulder', 'leftUpperArm', 'leftLowerArm', 'rightShoulder', 'rightUpperArm', 'rightLowerArm' 입니다.</p>
-            </div>
-            <div class="button-wrapper">
-                <button id="startbt" @click="vmcmix" :disabled="isRunning">신호 합치기!</button>
-                <button id="stopbt" @click="stop" :disabled="!isRunning" >포트 닫기</button>
+                <div class="form-layout">
+                    <div class="form-title">트래커 신호 (공백 구분)</div>
+                    <input v-model="use2ndData" placeholder="본의 이름을 공백으로 구분" />
+                </div>
+                <div class="button-wrapper">
+                    <button id="startbt" @click="vmcmix" :disabled="isRunning">신호 합치기!</button>
+                    <button id="stopbt" @click="stop" :disabled="!isRunning" >포트 닫기</button>
+                </div>
             </div>
         </div>
         <div class="part-wrapper">
@@ -107,6 +107,7 @@
     const port2 = ref(39542)
     const sendPort = ref(39539)
     const sendIp = ref('127.0.0.1')
+    const use2ndData = ref('Chest UpperChest LeftShoulder LeftUpperArm LeftLowerArm RightShoulder RightUpperArm RightLowerArm')
     const isRunning = ref(false)
 
     const port3 = ref(39539)
@@ -127,7 +128,7 @@
         const { data } = await useFetch('/api/vmcmixer', {
             method: 'POST',
             body: { 
-                use2ndData: ['Chest', 'UpperChest', 'LeftShoulder', 'LeftUpperArm', 'LeftLowerArm', 'RightShoulder', 'RightUpperArm', 'RightLowerArm'], 
+                use2ndData: use2ndData.value.split(' '),
                 port1: port1.value, 
                 port2: port2.value, 
                 sendIp: sendIp.value, 
