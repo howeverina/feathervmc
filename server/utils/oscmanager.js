@@ -2,7 +2,7 @@ import osc from 'osc'
 import * as THREE from 'three';
 
 // 전역 변수로 포트 객체들 저장
-let firstPort, secondPort, sendPort, bonePort
+let firstPort, secondPort, sendPort, thirdPort, sendPort1, sendPort2, bonePort
 let use2ndDataArray = []
 let startBone, endBone
 let boneInterval
@@ -11,6 +11,7 @@ export const initOSC = (config) => {
     // 이미 포트가 열려 있다면 닫고 새로 열거나, 혹은 무시하는 로직 필요
     if (firstPort || secondPort || sendPort) {
         console.log("포트가 이미 열려 있습니다. 설정을 업데이트합니다.")
+        stopOSC(); // 기존 실행 중인 프로세스 정리
         use2ndDataArray = config.use2ndData
         return
     }
@@ -29,7 +30,7 @@ export const initOSC = (config) => {
 
     sendPort = new osc.UDPPort({
         localAddress: "127.0.0.1",
-        remoteAddress: config.sendIP,
+        remoteAddress: config.sendIp,
         remotePort: config.sendPort
     })
 
@@ -74,6 +75,63 @@ export const stopOSC = () => {
     }
     if (sendPort) {
         sendPort.close()
+    }
+
+    console.log("VMC Bridge Stopped");
+}
+
+export const initOSC2 = (config) => {
+    // 이미 포트가 열려 있다면 닫고 새로 열거나, 혹은 무시하는 로직 필요
+    if (thirdPort || sendPort1 || sendPort2) {
+        console.log("포트가 이미 열려 있습니다. 설정을 업데이트합니다.")
+        stopOSC2(); // 기존 실행 중인 프로세스 정리
+    }
+
+    thirdPort = new osc.UDPPort({
+        localAddress: "0.0.0.0",
+        localPort: config.port3
+    })
+
+    sendPort1 = new osc.UDPPort({
+        localAddress: "127.0.0.1",
+        localPort: 0,
+        remoteAddress: config.sendIp1,
+        remotePort: config.sendPort1
+    })
+
+    sendPort2 = new osc.UDPPort({
+        localAddress: "127.0.0.1",
+        localPort: 0,
+        remoteAddress: config.sendIp2,
+        remotePort: config.sendPort2
+    })
+
+    const forwardMessage2 = (oscMessage) => {
+        sendPort1.send(oscMessage)
+        sendPort2.send(oscMessage)
+    }
+
+    thirdPort.on("message", (msg) => forwardMessage2(msg))
+
+    thirdPort.open()
+    sendPort1.open()
+    sendPort2.open()
+
+    console.log("OSC Ports Opened!")
+}
+
+// 포트 닫기 함수 추가
+export const stopOSC2 = () => {
+    console.log("Closing OSC Ports...")
+
+    if (thirdPort) {
+        thirdPort.close()
+    }
+    if (sendPort1) {
+        sendPort1.close()
+    }
+    if (sendPort2) {
+        sendPort2.close()
     }
 
     console.log("VMC Bridge Stopped");
@@ -143,7 +201,7 @@ export const startCompoundBoneOSC = (config) => {
     ];
 
     if (bonePort) {
-        stopOSC(); // 기존 실행 중인 프로세스 정리
+        stopOSC3(); // 기존 실행 중인 프로세스 정리
     }
 
     bonePort = new osc.UDPPort({

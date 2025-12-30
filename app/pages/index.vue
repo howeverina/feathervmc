@@ -59,6 +59,10 @@
                     <div class="form-title">전송할 포트(2)</div>
                     <input v-model="sendPort2" type="number" placeholder="트래커 신호를 받아올 포트 입력" />
                 </div>
+                <div class="button-wrapper">
+                    <button id="startbt2" @click="vmcsplit" :disabled="isRunning2">신호 나누기!</button>
+                    <button id="stopbt2" @click="stop2" :disabled="!isRunning2" >포트 닫기</button>
+                </div>
             </div>
         </div>
         <div class="part-wrapper">
@@ -110,6 +114,7 @@
     const sendPort2 = ref(39544)
     const sendIp1 = ref('127.0.0.1')
     const sendIp2 = ref('127.0.0.1')
+    const isRunning2 = ref(false)
 
     const port4 = ref(39544)
     const sendPort4 = ref(39545)
@@ -130,6 +135,20 @@
             }
         })
         if (data.value?.success) isRunning.value = true
+    }
+
+    const vmcsplit = async () => {
+        const { data } = await useFetch('/api/vmcsplitter', {
+            method: 'POST',
+            body: {
+                port3: port3.value,
+                sendIp1: sendIp1.value, 
+                sendPort1: sendPort1.value,
+                sendIp2: sendIp2.value, 
+                sendPort2: sendPort2.value
+            }
+        })
+        if (data.value?.success) isRunning2.value = true
     }
     
     const vmcboneconnect = async () => {
@@ -152,6 +171,13 @@
             method: 'POST'
         });
         if (data.value?.success) isRunning.value = false
+    };
+    const stop2 = async () => {
+    
+        const { data } = await useFetch('/api/vmcstop2', {
+            method: 'POST'
+        });
+        if (data.value?.success) isRunning2.value = false
     };
     const stop3 = async () => {
     
