@@ -69,12 +69,15 @@ export const stopOSC = () => {
 
     if (firstPort) {
         firstPort.close()
+        firstPort = null
     }
     if (secondPort) {
         secondPort.close()
+        secondPort = null
     }
     if (sendPort) {
         sendPort.close()
+        sendPort = null
     }
 
     console.log("VMC Bridge Stopped");
@@ -126,18 +129,22 @@ export const stopOSC2 = () => {
 
     if (thirdPort) {
         thirdPort.close()
+        thirdPort = null
     }
     if (sendPort1) {
         sendPort1.close()
+        sendPort1 = null
     }
     if (sendPort2) {
         sendPort2.close()
+        sendPort2 = null
     }
 
     console.log("VMC Bridge Stopped");
 }
 
 export const startCompoundBoneOSC = (config) => {
+        console.log('실행은 되고있니..?')
 
     function multiplyQuaternions(a, b) {
         return {
@@ -216,6 +223,7 @@ export const startCompoundBoneOSC = (config) => {
 
     startBone = config.bone1 || 'Spine';
     endBone = config.bone2 || 'LeftHand';
+
     let chain1, chain2
 
     if (leftHandChain.includes(startBone)) {
@@ -276,13 +284,45 @@ export const startCompoundBoneOSC = (config) => {
             });
         });
 
-        const finalBoneTransform1 = calculateWorldTransform(boneChain1, boneMap1);
-        const finalBoneTransform2 = calculateWorldTransform(boneChain2, boneMap2);
+        // 1. 기본 월드 변환 계산 (Spine과 Hand)
+        let trans1 = calculateWorldTransform(boneChain1, boneMap1);
+        let trans2 = calculateWorldTransform(boneChain2, boneMap2);
+
+        // 2. 사용자가 설정한 로컬 오프셋 적용
+        // 본이 회전함에 따라 오프셋 방향도 같이 돌아가게 만듭니다.
+        const rotatedOffset1 = rotateVector(trans1.rotation, {
+            x: config.bone1x || 0,
+            y: config.bone1y || 0,
+            z: config.bone1z || 0
+        });
+
+        const rotatedOffset2 = rotateVector(trans2.rotation, {
+            x: config.bone2x || 0,
+            y: config.bone2y || 0,
+            z: config.bone2z || 0
+        });
+        
+        // 3. 최종 오프셋이 적용된 변환 객체 생성
+        const finalTransform1 = {
+            position: {
+                x: trans1.position.x + rotatedOffset1.x,
+                y: trans1.position.y + rotatedOffset1.y,
+                z: trans1.position.z + rotatedOffset1.z
+            }
+        };
+
+        const finalTransform2 = {
+            position: {
+                x: trans2.position.x + rotatedOffset2.x,
+                y: trans2.position.y + rotatedOffset2.y,
+                z: trans2.position.z + rotatedOffset2.z
+            }
+        };
 
         if (bonePort) {
             bonePort.send({
                 address: '/VMC/Ext/Bone/Pos',
-                args: getConnectingBone(finalBoneTransform1, finalBoneTransform2)
+                args: getConnectingBone(finalTransform1, finalTransform2)
             });
         }
     }, 50);
@@ -294,7 +334,14 @@ export const stopOSC3 = () => {
     console.log("Closing OSC Ports...")
 
     if (boneInterval) clearInterval(boneInterval)
-    if (bonePort) bonePort.close()
+    if (bonePort) {
 
-    console.log("VMC Bridge Stopped")
+        bonePort.once("close", () => {
+            console.log("포트가 완전히 닫혔습니다.");
+            bonePort = null; // 이제서야 완전히 비워줌
+        });
+        
+        bonePort.close()
+    }
+
 }

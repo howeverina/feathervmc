@@ -88,9 +88,21 @@
                     <div class="form-title">고정 본</div>
                     <input v-model="bone1" placeholder="본 명칭 입력" />
                 </div>
+                <div class="form2-layout">
+                    <div class="form-title">고정 본 오프셋</div>
+                    <input v-model="bone1x" type="number" placeholder="본 명칭 입력" />
+                    <input v-model="bone1y" type="number" placeholder="본 명칭 입력" />
+                    <input v-model="bone1z" type="number" placeholder="본 명칭 입력" />
+                </div>
                 <div class="form-layout">
                     <div class="form-title">유동 본</div>
                     <input v-model="bone2" placeholder="본 명칭 입력" />
+                </div>
+                <div class="form2-layout">
+                    <div class="form-title">유동 본 오프셋</div>
+                    <input v-model="bone2x" type="number" placeholder="본 명칭 입력" />
+                    <input v-model="bone2y" type="number" placeholder="본 명칭 입력" />
+                    <input v-model="bone2z" type="number" placeholder="본 명칭 입력" />
                 </div>
                 <div class="button-wrapper">
                     <button id="startbt3" @click="vmcboneconnect" :disabled="isRunning3">본 연결하기!</button>
@@ -122,10 +134,16 @@
     const sendIp4 = ref('127.0.0.1')
     const bone1 = ref('Spine')
     const bone2 = ref('LeftHand')
+    const bone1x = ref('0.1')
+    const bone1y = ref('0')
+    const bone1z = ref('0.2')
+    const bone2x = ref('0')
+    const bone2y = ref('0')
+    const bone2z = ref('0')
     const isRunning3 = ref(false)
 
     const vmcmix = async () => {
-        const { data } = await useFetch('/api/vmcmixer', {
+        const data = await $fetch('/api/vmcmixer', {
             method: 'POST',
             body: { 
                 use2ndData: use2ndData.value.split(' '),
@@ -135,11 +153,11 @@
                 sendPort: sendPort.value
             }
         })
-        if (data.value?.success) isRunning.value = true
+        if (data?.success) isRunning.value = true
     }
 
     const vmcsplit = async () => {
-        const { data } = await useFetch('/api/vmcsplitter', {
+        const data = await $fetch('/api/vmcsplitter', {
             method: 'POST',
             body: {
                 port3: port3.value,
@@ -149,43 +167,53 @@
                 sendPort2: sendPort2.value
             }
         })
-        if (data.value?.success) isRunning2.value = true
+        if (data?.success) isRunning2.value = true
     }
     
     const vmcboneconnect = async () => {
-        const { data } = await useFetch('/api/vmcboneconnecter', {
-            method: 'POST',
-            body: {
-                port4: port4.value,
-                sendIp4: sendIp4.value,
-                sendPort4: sendPort4.value,
-                bone1: bone1.value,
-                bone2: bone2.value
-            }
-        })
-        if (data.value?.success) isRunning3.value = true
+        try {
+            const data = await $fetch('/api/vmcboneconnecter', {
+                method: 'POST',
+                body: {
+                    port4: port4.value,
+                    sendIp4: sendIp4.value,
+                    sendPort4: sendPort4.value,
+                    bone1: bone1.value,
+                    bone2: bone2.value,
+                    bone1x: bone1x.value,
+                    bone1y: bone1y.value,
+                    bone1z: bone1z.value,
+                    bone2x: bone2x.value,
+                    bone2y: bone2y.value,
+                    bone2z: bone2z.value
+                }
+            })
+            if (data?.success) isRunning3.value = true
+        } catch (error) {
+            console.error('요청 실패:', error)
+        }
     }
 
     const stop = async () => {
     
-        const { data } = await useFetch('/api/vmcstop', {
+        const data = await $fetch('/api/vmcstop', {
             method: 'POST'
         });
-        if (data.value?.success) isRunning.value = false
+        if (data?.success) isRunning.value = false
     };
     const stop2 = async () => {
     
-        const { data } = await useFetch('/api/vmcstop2', {
+        const data = await $fetch('/api/vmcstop2', {
             method: 'POST'
         });
-        if (data.value?.success) isRunning2.value = false
+        if (data?.success) isRunning2.value = false
     };
     const stop3 = async () => {
     
-        const { data } = await useFetch('/api/vmcstop3', {
+        const data = await $fetch('/api/vmcstop3', {
             method: 'POST'
         });
-        if (data.value?.success) isRunning3.value = false
+        if (data?.success) isRunning3.value = false
     };
 </script>
 
@@ -220,6 +248,11 @@
     .form-layout {
         display: grid;
         grid-template-columns: 200px 1fr;
+    }
+
+    .form2-layout {
+        display: grid;
+        grid-template-columns: 200px 1fr 1fr 1fr;
     }
 
     .form-title {
